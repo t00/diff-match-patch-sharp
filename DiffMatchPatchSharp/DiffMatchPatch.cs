@@ -217,39 +217,53 @@ namespace DiffMatchPatchSharp
     }
 
 
-    /**
-     * Class containing the diff, match and patch methods.
-     * Also Contains the behaviour settings.
-     */
+    /// <summary>
+    /// Class containing the diff, match and patch methods.
+    /// Also Contains the behaviour settings.
+    /// </summary>
     public class DiffMatchPatch
     {
         // Defaults.
         // Set these on your diff_match_patch instance to override the defaults.
 
-        // Number of seconds to map a diff before giving up (0 for infinity).
-        public float DiffTimeout { get; set; } = 1.0f;
+        /// <summary>
+        /// Number of seconds to map a diff before giving up (0 for infinity).
+        /// </summary>
+        public float DiffTimeout { get; set; } = 0.0f;
 
-        // Cost of an empty edit operation in terms of edit characters.
+        /// <summary>
+        /// Cost of an empty edit operation in terms of edit characters.
+        /// </summary>
         public short DiffEditCost { get; set; } = 4;
 
-        // At what point is no match declared (0.0 = perfection, 1.0 = very loose).
+        /// <summary>
+        /// At what point is no match declared (0.0 = perfection, 1.0 = very loose).
+        /// </summary>
         public float MatchThreshold { get; set; } = 0.5f;
 
-        // How far to search for a match (0 = exact location, 1000+ = broad match).
-        // A match this many characters away from the expected location will add
-        // 1.0 to the score (0.0 is a perfect match).
+        /// <summary>
+        /// How far to search for a match (0 = exact location, 1000+ = broad match).
+        /// A match this many characters away from the expected location will add
+        /// 1.0 to the score (0.0 is a perfect match).
+        /// </summary>
         public int MatchDistance { get; set; } = 1000;
 
-        // When deleting a large block of text (over ~64 characters), how close
-        // do the contents have to be to match the expected contents. (0.0 =
-        // perfection, 1.0 = very loose).  Note that Match_Threshold controls
-        // how closely the end points of a delete need to match.
+        /// <summary>
+        /// When deleting a large block of text (over ~64 characters), how close
+        /// do the contents have to be to match the expected contents. (0.0 =
+        /// perfection, 1.0 = very loose).  Note that Match_Threshold controls
+        /// how closely the end points of a delete need to match.
+        /// </summary>
         public float PatchDeleteThreshold { get; set; } = 0.5f;
 
-        // Chunk size for context length.
+        /// <summary>
+        /// Chunk size for context length.
+        /// </summary>
         public short PatchMargin { get; set; } = 4;
 
-        // The number of bits in an int.
+        /// <summary>
+        /// The number of bits in an int.
+        /// </summary>
         private short MatchMaxBits = 32;
 
         //  DIFF FUNCTIONS
