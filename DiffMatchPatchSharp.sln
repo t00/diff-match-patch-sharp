@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiffMatchPatchSharp", "DiffMatchPatchSharp\DiffMatchPatchSharp.csproj", "{98134B6D-0239-4BF4-A55B-0A6EA907BD61}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiffMatchPatchSharp.Tests", "DiffMatchPatchSharp.Tests\DiffMatchPatchSharp.Tests.csproj", "{57532D27-8BE7-4BDE-8FE8-0FDE55DECD24}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{98134B6D-0239-4BF4-A55B-0A6EA907BD61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98134B6D-0239-4BF4-A55B-0A6EA907BD61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98134B6D-0239-4BF4-A55B-0A6EA907BD61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98134B6D-0239-4BF4-A55B-0A6EA907BD61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57532D27-8BE7-4BDE-8FE8-0FDE55DECD24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57532D27-8BE7-4BDE-8FE8-0FDE55DECD24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57532D27-8BE7-4BDE-8FE8-0FDE55DECD24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57532D27-8BE7-4BDE-8FE8-0FDE55DECD24}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D5E83CE3-26C2-4802-8731-42F20864AD5D}
+	EndGlobalSection
+EndGlobal
