@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace DiffMatchPatchSharp
 {
     public class XmlDiffChanges: DiffChanges
     {
-        public IList<(XElement element1, XElement element2)> Elements { get; } = new List<(XElement element1, XElement element2)>();
+        public IList<(XNode node1, XNode node2)> Elements { get; } = new List<(XNode, XNode)>();
 
         public void AddChanges(DiffMatchPatch dmp, XContainer doc1, XContainer doc2, bool cleanupSemantics)
         {
             var texts = GetElementTexts(doc1, doc2);
             foreach (var text in texts)
             {
-                Elements.Add((text.element1, text.element2));
+                Elements.Add((text.node1, text.node2));
                 AddChange(dmp, text.text1, text.text2, cleanupSemantics);
             }
         }
@@ -20,37 +21,37 @@ namespace DiffMatchPatchSharp
         /// <summary>
         /// Gets plain text from elements, returns null if element has no text
         /// </summary>
-        /// <param name="element">Element to get text from</param>
+        /// <param name="node">Element to get text from</param>
         /// <returns>Element's text</returns>
-        protected virtual string GetElementText(XElement element)
+        protected virtual string GetElementText(XNode node)
         {
-            if (element != null && !element.IsEmpty && !element.HasElements)
+            if (node.NodeType == XmlNodeType.Text)
             {
-                return element.Value;
+                return node.ToString(SaveOptions.DisableFormatting);
             }
             return null;
         }
 
-        private IEnumerable<(XElement element1, string text1, XElement element2, string text2)> GetElementTexts(XContainer doc1, XContainer doc2)
+        private IEnumerable<(XNode node1, string text1, XNode node2, string text2)> GetElementTexts(XContainer doc1, XContainer doc2)
         {
-            var pairs = GetElements(doc1, doc2);
+            var pairs = GetNodes(doc1, doc2);
             foreach (var e in pairs)
             {
-                var text1 = GetElementText(e.element1);
-                var text2 = GetElementText(e.element2);
+                var text1 = GetElementText(e.node1);
+                var text2 = GetElementText(e.node2);
 
                 if (text1 != null || text2 != null)
                 {
-                    yield return (e.element1, text1, e.element2, text2);
+                    yield return (e.node1, text1, e.node2, text2);
                 }
             }
         }
 
-        private static IEnumerable<(XElement element1, XElement element2)> GetElements(XContainer doc1, XContainer doc2)
+        private static IEnumerable<(XNode node1, XNode node2)> GetNodes(XContainer doc1, XContainer doc2)
         {
-            using (var e1 = doc1.Descendants().GetEnumerator())
+            using (var e1 = doc1.DescendantNodes().GetEnumerator())
             {
-                using (var e2 = doc2.Descendants().GetEnumerator())
+                using (var e2 = doc2.DescendantNodes().GetEnumerator())
                 {
                     while (e1.MoveNext())
                     {
