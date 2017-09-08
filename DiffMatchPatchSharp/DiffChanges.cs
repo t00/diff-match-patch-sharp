@@ -137,7 +137,7 @@ namespace DiffMatchPatchSharp
             }
         }
 
-        protected virtual string Mark(StringBuilder sb, string text, Color color)
+        protected virtual string Mark(string text, Color color)
         {
             return $"<span style=\"background-color: {GetHtmlColor(color)}\">{text}</span>";
         }
@@ -155,7 +155,7 @@ namespace DiffMatchPatchSharp
             }
             else
             {
-                Mark(sb, text, GetColor(change));
+                sb.Append(Mark(text, GetColor(change)));
             }
         }
     }
