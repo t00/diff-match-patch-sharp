@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace DiffMatchPatchSharp
             Deleted
         }
 
-        public IList<List<Diff>> Diffs { get;  } = new List<List<Diff>>();
+        public IList<IList<Diff>> Diffs { get; } = new List<IList<Diff>>();
 
         public Color AddedColor { get; set; } = Color.YellowGreen;
 
@@ -24,32 +25,38 @@ namespace DiffMatchPatchSharp
 
         public Color ChangedColor { get; set; } = Color.Yellow;
 
-        public DiffChanges(DiffMatchPatch dmp, string text1, string text2, bool cleanupSemantics = true)
+        public void AddChange(DiffMatchPatch dmp, string text1, string text2, bool cleanupSemantics = true)
         {
-            AddDiff(dmp, text1, text2, cleanupSemantics);
+            Add(CreateDiff(dmp, text1, text2, cleanupSemantics));
         }
 
-        public DiffChanges(DiffMatchPatch dmp, IEnumerable<string> texts1, IEnumerable<string> texts2, bool cleanupSemantics = true)
+        public int Add(IList<Diff> diff)
+        {
+            Diffs.Add(diff);
+            return Diffs.Count - 1;
+        }
+
+        public void AddChanges(DiffMatchPatch dmp, IEnumerable<string> texts1, IEnumerable<string> texts2, bool cleanupSemantics = true)
         {
             foreach (var diff in texts1.Zip(texts2, (a, b) => new { Text1 = a, Text2 = b }))
             {
-                AddDiff(dmp, diff.Text1, diff.Text2, cleanupSemantics);
+                AddChange(dmp, diff.Text1, diff.Text2, cleanupSemantics);
             }
         }
 
-        public DiffChanges(List<Diff> diff)
+        public void AddChangesParallel(DiffMatchPatch dmp, IEnumerable<string> texts1, IEnumerable<string> texts2, bool cleanupSemantics = true)
         {
-            Diffs.Add(diff);
-        }
-
-        public void AddDiff(DiffMatchPatch dmp, string text1, string text2, bool cleanupSemantics)
-        {
-            var d = dmp.DiffMain(text1, text2);
-            if (cleanupSemantics && d.Count > 2)
+            var texts = texts1.Zip(texts2, (a, b) => new { text1 = a, text2 = b }).Select((t, i) => new { t.text1, t.text2, index = i });
+            var bag = new ConcurrentBag<(int index, IList<Diff> diff)>();
+            texts.AsParallel().ForAll(text =>
             {
-                dmp.DiffCleanupSemantic(d);
+                var change = CreateDiff(dmp, text.text1, text.text2, cleanupSemantics);
+                bag.Add((text.index, change));
+            });
+            foreach (var b in bag.OrderBy(b => b.index))
+            {
+                Add(b.diff);
             }
-            this.Diffs.Add(d);
         }
 
         public void Process1(Action<Change, string, int> action)
@@ -135,6 +142,16 @@ namespace DiffMatchPatchSharp
                 default:
                     return Color.Empty;
             }
+        }
+
+        protected virtual IList<Diff> CreateDiff(DiffMatchPatch dmp, string text1, string text2, bool cleanupSemantics)
+        {
+            var d = dmp.DiffMain(text1 ?? string.Empty, text2 ?? string.Empty);
+            if (cleanupSemantics && d.Count > 2)
+            {
+                dmp.DiffCleanupSemantic(d);
+            }
+            return d;
         }
 
         protected virtual string Mark(string text, Color color)
