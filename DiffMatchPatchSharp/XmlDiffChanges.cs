@@ -6,7 +6,16 @@ namespace DiffMatchPatchSharp
 {
     public class XmlDiffChanges: DiffChanges
     {
+        public bool CheckAttributeChanges { get; set; }
+
         public IList<(XNode node1, XNode node2)> Elements { get; } = new List<(XNode, XNode)>();
+
+        public void AddChanges(DiffMatchPatch dmp, string xml1, string xml2, bool cleanupSemantics)
+        {
+            var doc1 = XDocument.Parse(xml1);
+            var doc2 = XDocument.Parse(xml2);
+            AddChanges(dmp, doc1, doc2, cleanupSemantics);
+        }
 
         public void AddChanges(DiffMatchPatch dmp, XContainer doc1, XContainer doc2, bool cleanupSemantics)
         {
@@ -37,8 +46,8 @@ namespace DiffMatchPatchSharp
             var pairs = GetNodes(doc1, doc2);
             foreach (var e in pairs)
             {
-                var text1 = GetElementText(e.node1);
-                var text2 = GetElementText(e.node2);
+                var text1 = e.node1 == null ? null : GetElementText(e.node1);
+                var text2 = e.node2 == null ? null : GetElementText(e.node2);
 
                 if (text1 != null || text2 != null)
                 {

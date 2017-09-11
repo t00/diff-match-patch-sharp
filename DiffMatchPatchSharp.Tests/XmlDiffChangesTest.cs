@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
+﻿using System.Text;
 using System.Xml.Linq;
 using NUnit.Framework;
 
@@ -34,6 +32,11 @@ namespace DiffMatchPatchSharp.Tests
             var dmp = new DiffMatchPatch();
             xc.AddChanges(dmp, doc1, doc2, true);
 
+            TestCommonOutput(xc);
+        }
+
+        private static void TestCommonOutput(XmlDiffChanges xc)
+        {
             var sb1 = new StringBuilder();
             xc.Process1((ch, text, idx) => { DiffChangeTest.ProcesTest(sb1, ch, text, idx); });
             Assert.AreEqual(3, xc.Elements.Count);
@@ -48,6 +51,19 @@ namespace DiffMatchPatchSharp.Tests
             var sb2 = new StringBuilder();
             xc.Process2((ch, text, idx) => { DiffChangeTest.ProcesTest(sb2, ch, text, idx); });
             Assert.AreEqual("First text in the *html page*0.More text *coming*1 later+.+1Hell", sb2.ToString());
+        }
+
+        [Test]
+        public void TestHtmlChange()
+        {
+            var html1 = "<p><span>First text added in the paragraph.</span><span>More text added later</span>Hello</p>";
+            var html2 = "<p><span>First text in the html page.</span><span>More text coming later.</span>Hell</p>";
+
+            var xc = new XmlDiffChanges();
+            var dmp = new DiffMatchPatch();
+            xc.AddChanges(dmp, html1, html2, true);
+
+            TestCommonOutput(xc);
         }
     }
 }
