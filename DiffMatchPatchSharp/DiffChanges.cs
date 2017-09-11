@@ -144,6 +144,11 @@ namespace DiffMatchPatchSharp
             }
         }
 
+        public string GetHtmlColor(Color color)
+        {
+            return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
+        }
+
         protected virtual IList<Diff> CreateDiff(DiffMatchPatch dmp, string text1, string text2, bool cleanupSemantics)
         {
             var d = dmp.DiffMain(text1 ?? string.Empty, text2 ?? string.Empty);
@@ -157,11 +162,6 @@ namespace DiffMatchPatchSharp
         protected virtual string Mark(string text, Color color)
         {
             return $"<span style=\"background-color: {GetHtmlColor(color)}\">{text}</span>";
-        }
-
-        protected string GetHtmlColor(Color color)
-        {
-            return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
         }
 
         private void Mark(StringBuilder sb, string text, Change change)
