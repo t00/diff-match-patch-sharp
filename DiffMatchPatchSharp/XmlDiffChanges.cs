@@ -6,8 +6,6 @@ namespace DiffMatchPatchSharp
 {
     public class XmlDiffChanges: DiffChanges
     {
-        public bool CheckAttributeChanges { get; set; }
-
         public IList<(XNode node1, XNode node2)> Elements { get; } = new List<(XNode, XNode)>();
 
         public void AddChanges(DiffMatchPatch dmp, string xml1, string xml2, bool cleanupSemantics)
@@ -43,24 +41,24 @@ namespace DiffMatchPatchSharp
 
         private IEnumerable<(XNode node1, string text1, XNode node2, string text2)> GetElementTexts(XContainer doc1, XContainer doc2)
         {
-            var pairs = GetNodes(doc1, doc2);
+            var pairs = GetNodes(doc1.DescendantNodes(), doc2.DescendantNodes());
             foreach (var e in pairs)
             {
-                var text1 = e.node1 == null ? null : GetElementText(e.node1);
-                var text2 = e.node2 == null ? null : GetElementText(e.node2);
+                var text1 = e.Item1 == null ? null : GetElementText(e.Item1);
+                var text2 = e.Item2 == null ? null : GetElementText(e.Item2);
 
                 if (text1 != null || text2 != null)
                 {
-                    yield return (e.node1, text1, e.node2, text2);
+                    yield return (e.Item1, text1, e.Item2, text2);
                 }
             }
         }
 
-        private static IEnumerable<(XNode node1, XNode node2)> GetNodes(XContainer doc1, XContainer doc2)
+        private static IEnumerable<(TItem, TItem)> GetNodes<TItem>(IEnumerable<TItem> items1, IEnumerable<TItem> items2)
         {
-            using (var e1 = doc1.DescendantNodes().GetEnumerator())
+            using (var e1 = items1.GetEnumerator())
             {
-                using (var e2 = doc2.DescendantNodes().GetEnumerator())
+                using (var e2 = items2.GetEnumerator())
                 {
                     while (e1.MoveNext())
                     {
@@ -72,7 +70,7 @@ namespace DiffMatchPatchSharp
                         {
                             do
                             {
-                                yield return (e1.Current, null);
+                                yield return (e1.Current, default(TItem));
                             }
                             while (e1.MoveNext());
                             yield break;
@@ -82,11 +80,37 @@ namespace DiffMatchPatchSharp
                     {
                         do
                         {
-                            yield return (null, e2.Current);
+                            yield return (default(TItem), e2.Current);
                         } while (e2.MoveNext());
                     }
                 }
             }
+        }
+
+        public bool CompareStylesEqual(XElement leftElement, XElement rightElement)
+        {
+            if (leftElement == null || rightElement == null)
+            {
+                return false;
+            }
+            var style1 = DiffHtmlExtensions.ReadInlineStyle(leftElement);
+            var style2 = DiffHtmlExtensions.ReadInlineStyle(rightElement);
+            if (!DiffHtmlExtensions.AreStylesEqual(style1, style2))
+            {
+                var bgColor = DiffHtmlExtensions.GetHtmlColor(GetColor(Change.Changed));
+                var style = new Dictionary<string, string> { { "background-color", bgColor } };
+                DiffHtmlExtensions.SetStyle(leftElement, style);
+                DiffHtmlExtensions.SetStyle(rightElement, style);
+                return false;
+            }
+            foreach (var e in GetNodes(leftElement.Elements(), rightElement.Elements()))
+            {
+                if (!CompareStylesEqual(e.Item1, e.Item2))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
