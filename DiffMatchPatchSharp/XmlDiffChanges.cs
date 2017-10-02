@@ -8,20 +8,20 @@ namespace DiffMatchPatchSharp
     {
         public IList<(XNode node1, XNode node2)> Elements { get; } = new List<(XNode, XNode)>();
 
-        public void AddChanges(DiffMatchPatch dmp, string xml1, string xml2, bool cleanupSemantics)
+        public void AddChanges(DiffMatchPatch dmp, string xml1, string xml2)
         {
             var doc1 = XDocument.Parse(xml1);
             var doc2 = XDocument.Parse(xml2);
-            AddChanges(dmp, doc1, doc2, cleanupSemantics);
+            AddChanges(dmp, doc1, doc2);
         }
 
-        public void AddChanges(DiffMatchPatch dmp, XContainer doc1, XContainer doc2, bool cleanupSemantics)
+        public void AddChanges(DiffMatchPatch dmp, XContainer doc1, XContainer doc2)
         {
             var texts = GetElementTexts(doc1, doc2);
             foreach (var text in texts)
             {
                 Elements.Add((text.node1, text.node2));
-                AddChange(dmp, text.text1, text.text2, cleanupSemantics);
+                AddChange(dmp, text.text1, text.text2);
             }
         }
 
@@ -97,10 +97,8 @@ namespace DiffMatchPatchSharp
             var style2 = DiffHtmlExtensions.ReadInlineStyle(rightElement);
             if (!DiffHtmlExtensions.AreStylesEqual(style1, style2))
             {
-                var bgColor = DiffHtmlExtensions.GetHtmlColor(GetColor(Change.Changed));
-                var style = new Dictionary<string, string> { { "background-color", bgColor } };
-                DiffHtmlExtensions.SetStyle(leftElement, style);
-                DiffHtmlExtensions.SetStyle(rightElement, style);
+                Mark(leftElement, Change.Changed);
+                Mark(rightElement, Change.Changed);
                 return false;
             }
             foreach (var e in GetNodes(leftElement.Elements(), rightElement.Elements()))
@@ -111,6 +109,12 @@ namespace DiffMatchPatchSharp
                 }
             }
             return true;
+        }
+
+        protected virtual void Mark(XElement element, Change change)
+        {
+            var style = DiffHtmlExtensions.CreateStyle(GetColor(change));
+            DiffHtmlExtensions.SetStyle(element, style);
         }
     }
 }

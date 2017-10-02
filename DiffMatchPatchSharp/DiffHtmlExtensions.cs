@@ -14,6 +14,13 @@ namespace DiffMatchPatchSharp
             return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
         }
 
+        public static IDictionary<string, string> CreateStyle(Color color)
+        {
+            var bgColor = GetHtmlColor(color);
+            var style = new Dictionary<string, string> { { "background-color", bgColor } };
+            return style;
+        }
+
         public static string GetStyle(XElement element)
         {
             return element.Attribute(XName.Get("style"))?.Value;
@@ -137,13 +144,13 @@ namespace DiffMatchPatchSharp
 
         public static bool AreStylesEqual(IDictionary<string, string> style1, IDictionary<string, string> style2, ICollection<string> compareOnly = null, StringComparison valueComparison = StringComparison.InvariantCultureIgnoreCase)
         {
-            if (style1 == style2)
-            {
-                return true;
-            }
             if (style1 == null || style2 == null)
             {
                 return false;
+            }
+            if (style1 == style2)
+            {
+                return true;
             }
 
             var keysTotTest = style1.Keys.Union(style2.Keys).Where(x => compareOnly == null || compareOnly.Contains(x));

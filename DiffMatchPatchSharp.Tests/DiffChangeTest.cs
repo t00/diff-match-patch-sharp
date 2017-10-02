@@ -11,7 +11,7 @@ namespace DiffMatchPatchSharp.Tests
         {
             const string text1 = "There is a bird in a bush";
             const string text2 = "There is bird in the bush and it is dead";
-            var dc = new DiffChanges();
+            var dc = new TextDiffChanges();
             dc.AddChange(new DiffMatchPatch(), text1, text2);
 
             var sb1 = new StringBuilder();
@@ -28,7 +28,7 @@ namespace DiffMatchPatchSharp.Tests
         {
             var texts1 = new[] { "There is a bird in a bush which is green.", "Another bird is eating cherries.", "A crazy dog is barking at the tree." };
             var texts2 = new[] { "There is one bird in a bush which is green and is eating cherries.", "Another bird is flying around.", "The dog is at the wrong tree." };
-            var dc = new DiffChanges();
+            var dc = new TextDiffChanges();
             dc.AddChanges(new DiffMatchPatch(), texts1, texts2);
 
             var sb1 = new StringBuilder();
@@ -45,7 +45,7 @@ namespace DiffMatchPatchSharp.Tests
         {
             var texts1 = new[] { "There is a bird in a bush which is green.", "Another bird is eating cherries.", "A crazy dog is barking at the tree." };
             var texts2 = new[] { "There is one bird in a bush which is green and is eating cherries.", "Another bird is flying around.", "The dog is at the wrong tree." };
-            var dc = new DiffChanges();
+            var dc = new TextDiffChanges();
             dc.AddChangesParallel(new DiffMatchPatch(), texts1, texts2);
 
             var sb1 = new StringBuilder();

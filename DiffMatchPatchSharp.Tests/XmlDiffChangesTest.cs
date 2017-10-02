@@ -30,7 +30,7 @@ namespace DiffMatchPatchSharp.Tests
 
             var xc = new XmlDiffChanges();
             var dmp = new DiffMatchPatch();
-            xc.AddChanges(dmp, doc1, doc2, true);
+            xc.AddChanges(dmp, doc1, doc2);
 
             TestCommonOutput(xc);
         }
@@ -61,7 +61,7 @@ namespace DiffMatchPatchSharp.Tests
 
             var xc = new XmlDiffChanges();
             var dmp = new DiffMatchPatch();
-            xc.AddChanges(dmp, html1, html2, true);
+            xc.AddChanges(dmp, html1, html2);
 
             TestCommonOutput(xc);
         }
