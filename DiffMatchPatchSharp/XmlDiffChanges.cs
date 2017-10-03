@@ -1,28 +1,26 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace DiffMatchPatchSharp
 {
-    public class XmlDiffChanges: DiffChanges
+    public abstract class XmlDiffChanges: DiffChanges
     {
-        public IList<(XNode node1, XNode node2)> Elements { get; } = new List<(XNode, XNode)>();
+        public IList<(TextElement change1, TextElement change2)> Elements { get; } = new List<(TextElement, TextElement)>();
 
-        public void AddChanges(DiffMatchPatch dmp, string xml1, string xml2)
+        public virtual string GetElementText(XElement leftElement)
         {
-            var doc1 = XDocument.Parse(xml1);
-            var doc2 = XDocument.Parse(xml2);
-            AddChanges(dmp, doc1, doc2);
-        }
-
-        public void AddChanges(DiffMatchPatch dmp, XContainer doc1, XContainer doc2)
-        {
-            var texts = GetElementTexts(doc1, doc2);
-            foreach (var text in texts)
+            var builder = new StringBuilder(256);
+            using (var sw = new StringWriter(builder))
             {
-                Elements.Add((text.node1, text.node2));
-                AddChange(dmp, text.text1, text.text2);
+                using (var htmlWriter = XmlWriter.Create(sw, new XmlWriterSettings { OmitXmlDeclaration = true, Indent = false }))
+                {
+                    leftElement.Save(htmlWriter);
+                }
             }
+            return builder.ToString();
         }
 
         /// <summary>
@@ -39,7 +37,7 @@ namespace DiffMatchPatchSharp
             return null;
         }
 
-        private IEnumerable<(XNode node1, string text1, XNode node2, string text2)> GetElementTexts(XContainer doc1, XContainer doc2)
+        protected IEnumerable<(XNode node1, string text1, XNode node2, string text2)> GetElementTexts(XContainer doc1, XContainer doc2)
         {
             var pairs = GetNodes(doc1.DescendantNodes(), doc2.DescendantNodes());
             foreach (var e in pairs)
@@ -87,7 +85,7 @@ namespace DiffMatchPatchSharp
             }
         }
 
-        public bool CompareStylesEqual(XElement leftElement, XElement rightElement)
+        public bool CompareHtmlStyleEqual(XElement leftElement, XElement rightElement)
         {
             if (leftElement == null || rightElement == null)
             {
@@ -97,13 +95,13 @@ namespace DiffMatchPatchSharp
             var style2 = DiffHtmlExtensions.ReadInlineStyle(rightElement);
             if (!DiffHtmlExtensions.AreStylesEqual(style1, style2))
             {
-                Mark(leftElement, Change.Changed);
-                Mark(rightElement, Change.Changed);
+                MarkHtmlChange(leftElement, DiffChange.Changed);
+                MarkHtmlChange(rightElement, DiffChange.Changed);
                 return false;
             }
             foreach (var e in GetNodes(leftElement.Elements(), rightElement.Elements()))
             {
-                if (!CompareStylesEqual(e.Item1, e.Item2))
+                if (!CompareHtmlStyleEqual(e.Item1, e.Item2))
                 {
                     return false;
                 }
@@ -111,10 +109,19 @@ namespace DiffMatchPatchSharp
             return true;
         }
 
-        protected virtual void Mark(XElement element, Change change)
+        protected virtual void MarkHtmlChange(XElement element, DiffChange change)
         {
             var style = DiffHtmlExtensions.CreateStyle(GetColor(change));
             DiffHtmlExtensions.SetStyle(element, style);
+        }
+
+        protected virtual XElement CreateHtmlChangeElement(DiffChange change)
+        {
+            var span = new XElement(XName.Get("span"));
+            {
+                span.SetAttributeValue("style", $"background-color: {DiffHtmlExtensions.GetHtmlColor(GetColor(change))}");
+            }
+            return span;
         }
     }
 }

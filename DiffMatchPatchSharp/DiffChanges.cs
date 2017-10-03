@@ -1,21 +1,11 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 namespace DiffMatchPatchSharp
 {
     public abstract class DiffChanges
     {
-        public enum Change
-        {
-            None,
-            Added,
-            Changed,
-            Deleted
-        }
-
         public IList<IList<Diff>> Diffs { get; } = new List<IList<Diff>>();
 
         public bool CleanupSemantics { get; set; } = true;
@@ -26,105 +16,92 @@ namespace DiffMatchPatchSharp
 
         public Color ChangedColor { get; set; } = Color.Yellow;
 
-        public int Add(IList<Diff> diff)
+        protected int Add(IList<Diff> diff)
         {
             Diffs.Add(diff);
             return Diffs.Count - 1;
         }
 
-        public void AddChange(DiffMatchPatch dmp, string text1, string text2)
+        protected void AddChange(DiffMatchPatch dmp, string text1, string text2)
         {
             Add(CreateDiff(dmp, text1, text2));
         }
 
-        public void AddChanges(DiffMatchPatch dmp, IEnumerable<string> texts1, IEnumerable<string> texts2)
+        public void Process1(Action<DiffState> action)
         {
-            foreach (var diff in texts1.Zip(texts2, (a, b) => new { Text1 = a, Text2 = b }))
-            {
-                AddChange(dmp, diff.Text1, diff.Text2);
-            }
-        }
-
-        public void AddChangesParallel(DiffMatchPatch dmp, IEnumerable<string> texts1, IEnumerable<string> texts2)
-        {
-            var texts = texts1.Zip(texts2, (a, b) => new { text1 = a, text2 = b }).Select((t, i) => new { t.text1, t.text2, index = i });
-            var bag = new ConcurrentBag<(int index, IList<Diff> diff)>();
-            texts.AsParallel().ForAll(text =>
-            {
-                var change = CreateDiff(dmp, text.text1, text.text2);
-                bag.Add((text.index, change));
-            });
-            foreach (var b in bag.OrderBy(b => b.index))
-            {
-                Add(b.diff);
-            }
-        }
-
-        public void Process1(Action<Change, string, int> action)
-        {
+            var state = new DiffState();
             for (var diffIndex = 0; diffIndex < Diffs.Count; diffIndex++)
             {
+                state.ChangeIndex = diffIndex;
                 var diff = Diffs[diffIndex];
                 for (var opIndex = 0; opIndex < diff.Count; opIndex++)
                 {
+                    state.Diff = diff[opIndex];
                     if (diff[opIndex].Operation == Operation.Equal)
                     {
-                        action(Change.None, diff[opIndex].Text, diffIndex);
+                        state.Change = DiffChange.None;
+                        action(state);
                     }
                     else if (diff[opIndex].Operation == Operation.Delete)
                     {
                         if (opIndex + 1 < diff.Count && diff[opIndex + 1].Operation == Operation.Insert)
                         {
-                            // changed
-                            action(Change.Changed, diff[opIndex].Text, diffIndex);
+                            state.Change = DiffChange.Changed;
+                            action(state);
                         }
                         else
                         {
-                            // deleted
-                            action(Change.Deleted, diff[opIndex].Text, diffIndex);
+                            state.Change = DiffChange.Deleted;
+                            action(state);
                         }
                     }
+                    state.Offset += state.Diff.Text.Length;
                 }
             }
         }
 
-        public void Process2(Action<Change, string, int> action)
+        public void Process2(Action<DiffState> action)
         {
+            var state = new DiffState();
             for (var diffIndex = 0; diffIndex < Diffs.Count; diffIndex++)
             {
+                state.ChangeIndex = diffIndex;
                 var diff = Diffs[diffIndex];
                 for (var opIndex = 0; opIndex < diff.Count; opIndex++)
                 {
+                    state.Diff = diff[opIndex];
                     if (diff[opIndex].Operation == Operation.Equal)
                     {
-                        action(Change.None, diff[opIndex].Text, diffIndex);
+                        state.Change = DiffChange.None;
+                        action(state);
                     }
                     else if (diff[opIndex].Operation == Operation.Insert)
                     {
                         if (opIndex > 0 && diff[opIndex - 1].Operation == Operation.Delete)
                         {
-                            // changed
-                            action(Change.Changed, diff[opIndex].Text, diffIndex);
+                            state.Change = DiffChange.Changed;
+                            action(state);
                         }
                         else
                         {
-                            // added
-                            action(Change.Added, diff[opIndex].Text, diffIndex);
+                            state.Change = DiffChange.Added;
+                            action(state);
                         }
                     }
+                    state.Offset += state.Diff.Text.Length;
                 }
             }
         }
 
-        public Color GetColor(Change change)
+        public Color GetColor(DiffChange change)
         {
             switch (change)
             {
-                case Change.Changed:
+                case DiffChange.Changed:
                     return ChangedColor;
-                case Change.Added:
+                case DiffChange.Added:
                     return AddedColor;
-                case Change.Deleted:
+                case DiffChange.Deleted:
                     return DeletedColor;
                 default:
                     return Color.Empty;

@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace DiffMatchPatchSharp.Tests
 {
     [TestFixture]
-    public class XmlDiffChangesTest
+    public class XmlElementDiffChangesTest
     {
         [Test]
         public void TestXmlChange()
@@ -28,28 +28,28 @@ namespace DiffMatchPatchSharp.Tests
             span22.AddAfterSelf(new XText("Hell"));
             doc2.Add(p2);
 
-            var xc = new XmlDiffChanges();
+            var xc = new XmlElementDiffChanges();
             var dmp = new DiffMatchPatch();
             xc.AddChanges(dmp, doc1, doc2);
 
             TestCommonOutput(xc);
         }
 
-        private static void TestCommonOutput(XmlDiffChanges xc)
+        private static void TestCommonOutput(XmlElementDiffChanges xc)
         {
             var sb1 = new StringBuilder();
-            xc.Process1((ch, text, idx) => { DiffChangeTest.ProcesTest(sb1, ch, text, idx); });
+            xc.Process1(state => { TextDiffChangeTest.ProcesTest(sb1, state); });
             Assert.AreEqual(3, xc.Elements.Count);
-            Assert.AreEqual("First text added in the paragraph.", xc.Elements[0].node1.ToString());
-            Assert.AreEqual("More text added later", xc.Elements[1].node1.ToString());
-            Assert.AreEqual("Hello", xc.Elements[2].node1.ToString());
-            Assert.AreEqual("First text in the html page.", xc.Elements[0].node2.ToString());
-            Assert.AreEqual("More text coming later.", xc.Elements[1].node2.ToString());
-            Assert.AreEqual("Hell", xc.Elements[2].node2.ToString());
+            Assert.AreEqual("First text added in the paragraph.", xc.Elements[0].change1.Node.ToString());
+            Assert.AreEqual("More text added later", xc.Elements[1].change1.Node.ToString());
+            Assert.AreEqual("Hello", xc.Elements[2].change1.Node.ToString());
+            Assert.AreEqual("First text in the html page.", xc.Elements[0].change2.Node.ToString());
+            Assert.AreEqual("More text coming later.", xc.Elements[1].change2.Node.ToString());
+            Assert.AreEqual("Hell", xc.Elements[2].change2.Node.ToString());
             Assert.AreEqual("First text -added -0in the *paragraph*0.More text *added*1 laterHell-o-2", sb1.ToString());
 
             var sb2 = new StringBuilder();
-            xc.Process2((ch, text, idx) => { DiffChangeTest.ProcesTest(sb2, ch, text, idx); });
+            xc.Process2(state => { TextDiffChangeTest.ProcesTest(sb2, state); });
             Assert.AreEqual("First text in the *html page*0.More text *coming*1 later+.+1Hell", sb2.ToString());
         }
 
@@ -59,7 +59,7 @@ namespace DiffMatchPatchSharp.Tests
             var html1 = "<p><span>First text added in the paragraph.</span><span>More text added later</span>Hello</p>";
             var html2 = "<p><span>First text in the html page.</span><span>More text coming later.</span>Hell</p>";
 
-            var xc = new XmlDiffChanges();
+            var xc = new XmlElementDiffChanges();
             var dmp = new DiffMatchPatch();
             xc.AddChanges(dmp, html1, html2);
 

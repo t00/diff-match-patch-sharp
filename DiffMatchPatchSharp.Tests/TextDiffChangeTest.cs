@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace DiffMatchPatchSharp.Tests
 {
     [TestFixture]
-    public class DiffChangeTest
+    public class TextDiffChangeTest
     {
         [Test]
         public void TestSingleStringProcess()
@@ -15,11 +15,11 @@ namespace DiffMatchPatchSharp.Tests
             dc.AddChange(new DiffMatchPatch(), text1, text2);
 
             var sb1 = new StringBuilder();
-            dc.Process1((ch, text, idx) => { ProcesTest(sb1, ch, text); });
+            dc.Process1(state => { ProcesTest(sb1, state); });
             Assert.AreEqual("There is -a -bird in *a* bush", sb1.ToString());
 
             var sb2 = new StringBuilder();
-            dc.Process2((ch, text, idx) => { ProcesTest(sb2, ch, text); });
+            dc.Process2(state => { ProcesTest(sb2, state); });
             Assert.AreEqual("There is bird in *the* bush+ and it is dead+", sb2.ToString());
         }
 
@@ -32,11 +32,11 @@ namespace DiffMatchPatchSharp.Tests
             dc.AddChanges(new DiffMatchPatch(), texts1, texts2);
 
             var sb1 = new StringBuilder();
-            dc.Process1((ch, text, idx) => { ProcesTest(sb1, ch, text, idx); });
+            dc.Process1(state => { ProcesTest(sb1, state); });
             Assert.AreEqual("There is *a*0 bird in a bush which is green.Another bird is *eat*1ing *cherries*1.*A crazy*2 dog is -barking -2at the tree.", sb1.ToString());
 
             var sb2 = new StringBuilder();
-            dc.Process2((ch, text, idx) => { ProcesTest(sb2, ch, text, idx); });
+            dc.Process2(state => { ProcesTest(sb2, state); });
             Assert.AreEqual("There is *one*0 bird in a bush which is green+ and is eating cherries+0.Another bird is *fly*1ing *around*1.*The*2 dog is at the+ wrong+2 tree.", sb2.ToString());
         }
 
@@ -49,29 +49,29 @@ namespace DiffMatchPatchSharp.Tests
             dc.AddChangesParallel(new DiffMatchPatch(), texts1, texts2);
 
             var sb1 = new StringBuilder();
-            dc.Process1((ch, text, idx) => { ProcesTest(sb1, ch, text, idx); });
+            dc.Process1(state => { ProcesTest(sb1, state); });
             Assert.AreEqual("There is *a*0 bird in a bush which is green.Another bird is *eat*1ing *cherries*1.*A crazy*2 dog is -barking -2at the tree.", sb1.ToString());
 
             var sb2 = new StringBuilder();
-            dc.Process2((ch, text, idx) => { ProcesTest(sb2, ch, text, idx); });
+            dc.Process2(state => { ProcesTest(sb2, state); });
             Assert.AreEqual("There is *one*0 bird in a bush which is green+ and is eating cherries+0.Another bird is *fly*1ing *around*1.*The*2 dog is at the+ wrong+2 tree.", sb2.ToString());
         }
 
-        public static void ProcesTest(StringBuilder sb, DiffChanges.Change ch, string text, int? index = null)
+        public static void ProcesTest(StringBuilder sb, DiffState state)
         {
-            switch (ch)
+            switch (state.Change)
             {
-                case DiffChanges.Change.None:
-                    sb.Append(text);
+                case DiffChange.None:
+                    sb.Append(state.Diff.Text);
                     break;
-                case DiffChanges.Change.Added:
-                    sb.Append('+').Append(text).Append('+').Append(index);
+                case DiffChange.Added:
+                    sb.Append('+').Append(state.Diff.Text).Append('+').Append(state.ChangeIndex);
                     break;
-                case DiffChanges.Change.Changed:
-                    sb.Append('*').Append(text).Append('*').Append(index);
+                case DiffChange.Changed:
+                    sb.Append('*').Append(state.Diff.Text).Append('*').Append(state.ChangeIndex);
                     break;
-                case DiffChanges.Change.Deleted:
-                    sb.Append('-').Append(text).Append('-').Append(index);
+                case DiffChange.Deleted:
+                    sb.Append('-').Append(state.Diff.Text).Append('-').Append(state.ChangeIndex);
                     break;
             }
         }
