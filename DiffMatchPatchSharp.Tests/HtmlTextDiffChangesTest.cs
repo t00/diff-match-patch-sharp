@@ -39,7 +39,9 @@ namespace DiffMatchPatchSharp.Tests
             xc.ProcessChanges();
 
             var e1 = xc.GetElementText((XElement)doc1.FirstNode);
+            Assert.AreEqual(html1, e1);
             var e2 = xc.GetElementText((XElement)doc2.FirstNode);
+            Assert.AreEqual("<p><span>First text</span><span>, second Text</span>,third text<span style=\"background-color: #9ACD32\">, last text</span></p>", e2);
         }
     }
 }

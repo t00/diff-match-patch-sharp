@@ -27,30 +27,33 @@ namespace DiffMatchPatchSharp
         {
             var newNodes = toList.Where(x => x.Node != null).Select(x => new { Element = x, Nodes = new List<XNode>() }).ToList();
             var partIndex = 0;
-            for (var el = 0; el < newNodes.Count; el++)
+            var partOffset = 0;
+            var elementIndex = 0;
+            while (elementIndex < newNodes.Count && partIndex < parts.Count)
             {
-                if (partIndex >= parts.Count)
-                {
-                    break;
-                }
-                var textElement = newNodes[el].Element;
+                var textElement = newNodes[elementIndex].Element;
                 do
                 {
                     var part = parts[partIndex];
-                    var partText = part.Text ?? string.Empty;
-                    var partEnd = part.Offset + partText.Length;
+                    var partText = part.Text?.Substring(partOffset) ?? string.Empty;
+                    var partEnd = part.Offset + partOffset + partText.Length;
                     var elementEnd = textElement.Offset + textElement.Length;
-                    if (partEnd > elementEnd && el + 1 < newNodes.Count)
+                    if (partEnd > elementEnd)
                     {
-                        newNodes[el].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText.Substring(0, partText.Length - (partEnd - elementEnd))));
-                        newNodes[el + 1].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText.Substring(partText.Length - (partEnd - elementEnd))));
+                        var partLength = partText.Length - (partEnd - elementEnd);
+                        partText = partText.Substring(0, partLength);
+                        newNodes[elementIndex++].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText));
+                        partOffset += partLength;
                     }
                     else
                     {
-                        newNodes[el].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText));
+                        newNodes[elementIndex].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText));
+                        partIndex++;
+                        partOffset = 0;
                     }
-                    partIndex++;
-                } while(partIndex < parts.Count && parts[partIndex].Offset < textElement.Offset + textElement.Length);
+                    textElement = newNodes[elementIndex].Element;
+                } while (elementIndex < newNodes.Count && partIndex < parts.Count && parts[partIndex].Offset < textElement.Offset + textElement.Length);
+                elementIndex++;
             }
 
             for (var idx = newNodes.Count - 1; idx >= 0; idx--)
