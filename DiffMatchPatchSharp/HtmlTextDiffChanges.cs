@@ -8,45 +8,68 @@ namespace DiffMatchPatchSharp
     {
         public void ProcessChanges()
         {
-            var leftDict = new Dictionary<int, IList<TextElement>>();
-            var rightDict = new Dictionary<int, IList<TextElement>>();
-            Process1(state => { ProcessElement(leftDict, state); });
-            Process2(state => { ProcessElement(rightDict, state); });
-            ApplyChanges(Elements.Select(e => e.change1).ToList(), leftDict);
-            ApplyChanges(Elements.Select(e => e.change2).ToList(), rightDict);
+            var parts1 = new List<TextPart>();
+            var elements1 = TextElements.Select(e => e.change1).ToList();
+            var parts2 = new List<TextPart>();
+            var elements2 = TextElements.Select(e => e.change2).ToList();
+            Process1(state => { ProcessElement(elements1, parts1, state); });
+            Process2(state => { ProcessElement(elements2, parts2, state); });
+            ApplyChanges(elements1, parts1);
+            ApplyChanges(elements2, parts2);
         }
 
-        protected virtual void ProcessElement(IDictionary<int, IList<TextElement>> dict, DiffState state)
+        protected virtual void ProcessElement(IList<TextElement> textElements, IList<TextPart> parts, DiffState state)
         {
-            XNode partNode;
-            if (state.Change != DiffChange.None)
-            {
-                var span = CreateHtmlChangeElement(state.Change);
-                span.Value = state.Diff.Text;
-                partNode = span;
-            }
-            else
-            {
-                partNode = new XText(state.Diff.Text);
-            }
-            if (!dict.TryGetValue(state.ChangeIndex, out var nodes))
-            {
-                nodes = new List<TextElement>();
-                dict.Add(state.ChangeIndex, nodes);
-            }
-            // TODO: Split node here
-            nodes.Add(new TextElement { Node = partNode, Offset = state.Offset });
+            parts.Add(new TextPart { Text = state.Diff.Text, Change = state.Change, Offset = state.Offset });
         }
 
-        protected virtual void ApplyChanges(IList<TextElement> toList, Dictionary<int, IList<TextElement>> dict)
+        protected virtual void ApplyChanges(IList<TextElement> toList, IList<TextPart> parts)
         {
-            // TODO: Insert nodes here
-            for (var idx = toList.Count - 1; idx >= 0; idx--)
+            var newNodes = toList.Where(x => x.Node != null).Select(x => new { Element = x, Nodes = new List<XNode>() }).ToList();
+            var partIndex = 0;
+            for (var el = 0; el < newNodes.Count; el++)
             {
-                if (dict.TryGetValue(idx, out var changes))
+                if (partIndex >= parts.Count)
                 {
-                    toList[idx].Node.ReplaceWith(changes.Select(x => x.Node));
+                    break;
                 }
+                var textElement = newNodes[el].Element;
+                do
+                {
+                    var part = parts[partIndex];
+                    var partText = part.Text ?? string.Empty;
+                    var partEnd = part.Offset + partText.Length;
+                    var elementEnd = textElement.Offset + textElement.Length;
+                    if (partEnd > elementEnd && el + 1 < newNodes.Count)
+                    {
+                        newNodes[el].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText.Substring(0, partText.Length - (partEnd - elementEnd))));
+                        newNodes[el + 1].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText.Substring(partText.Length - (partEnd - elementEnd))));
+                    }
+                    else
+                    {
+                        newNodes[el].Nodes.Add(CreateHtmlChangeElement(parts[partIndex].Change, partText));
+                    }
+                    partIndex++;
+                } while(partIndex < parts.Count && parts[partIndex].Offset < textElement.Offset + textElement.Length);
+            }
+
+            for (var idx = newNodes.Count - 1; idx >= 0; idx--)
+            {
+                toList[idx].Node.ReplaceWith(newNodes[idx].Nodes);
+            }
+        }
+
+        protected class TextPart
+        {
+            public string Text { get; set; }
+
+            public DiffChange Change { get; set; }
+
+            public int Offset { get; set; }
+
+            public override string ToString()
+            {
+                return $"{Text} ({Change}, {Offset})";
             }
         }
     }

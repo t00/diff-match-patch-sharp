@@ -16,11 +16,11 @@ namespace DiffMatchPatchSharp.Tests
 
             var sb1 = new StringBuilder();
             dc.Process1(state => { ProcesTest(sb1, state); });
-            Assert.AreEqual("There is -a -bird in *a* bush", sb1.ToString());
+            Assert.AreEqual("There is -a -0bird in *a*0 bush", sb1.ToString());
 
             var sb2 = new StringBuilder();
             dc.Process2(state => { ProcesTest(sb2, state); });
-            Assert.AreEqual("There is bird in *the* bush+ and it is dead+", sb2.ToString());
+            Assert.AreEqual("There is bird in *the*0 bush+ and it is dead+0", sb2.ToString());
         }
 
         [Test]

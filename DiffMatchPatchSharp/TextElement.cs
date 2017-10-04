@@ -6,6 +6,13 @@ namespace DiffMatchPatchSharp
     {
         public XNode Node { get; internal set; }
 
-        public int Offset { get; internal set; }
+        public int Offset { get; set; }
+
+        public int Length { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Node} ({Offset} {Length})";
+        }
     }
 }

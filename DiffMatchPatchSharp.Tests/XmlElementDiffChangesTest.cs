@@ -39,13 +39,13 @@ namespace DiffMatchPatchSharp.Tests
         {
             var sb1 = new StringBuilder();
             xc.Process1(state => { TextDiffChangeTest.ProcesTest(sb1, state); });
-            Assert.AreEqual(3, xc.Elements.Count);
-            Assert.AreEqual("First text added in the paragraph.", xc.Elements[0].change1.Node.ToString());
-            Assert.AreEqual("More text added later", xc.Elements[1].change1.Node.ToString());
-            Assert.AreEqual("Hello", xc.Elements[2].change1.Node.ToString());
-            Assert.AreEqual("First text in the html page.", xc.Elements[0].change2.Node.ToString());
-            Assert.AreEqual("More text coming later.", xc.Elements[1].change2.Node.ToString());
-            Assert.AreEqual("Hell", xc.Elements[2].change2.Node.ToString());
+            Assert.AreEqual(3, xc.TextElements.Count);
+            Assert.AreEqual("First text added in the paragraph.", xc.TextElements[0].change1.Node.ToString());
+            Assert.AreEqual("More text added later", xc.TextElements[1].change1.Node.ToString());
+            Assert.AreEqual("Hello", xc.TextElements[2].change1.Node.ToString());
+            Assert.AreEqual("First text in the html page.", xc.TextElements[0].change2.Node.ToString());
+            Assert.AreEqual("More text coming later.", xc.TextElements[1].change2.Node.ToString());
+            Assert.AreEqual("Hell", xc.TextElements[2].change2.Node.ToString());
             Assert.AreEqual("First text -added -0in the *paragraph*0.More text *added*1 laterHell-o-2", sb1.ToString());
 
             var sb2 = new StringBuilder();

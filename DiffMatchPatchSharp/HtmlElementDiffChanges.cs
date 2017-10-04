@@ -8,42 +8,32 @@ namespace DiffMatchPatchSharp
     {
         public void ProcessChanges()
         {
-            var leftDict = new Dictionary<int, IList<TextElement>>();
-            var rightDict = new Dictionary<int, IList<TextElement>>();
+            var leftDict = new Dictionary<int, IList<XNode>>();
+            var rightDict = new Dictionary<int, IList<XNode>>();
             Process1(state => { ProcessElement(leftDict, state); });
             Process2(state => { ProcessElement(rightDict, state); });
-            ApplyChanges(Elements.Select(e => e.change1).ToList(), leftDict);
-            ApplyChanges(Elements.Select(e => e.change2).ToList(), rightDict);
+            ApplyChanges(TextElements.Select(e => e.change1).ToList(), leftDict);
+            ApplyChanges(TextElements.Select(e => e.change2).ToList(), rightDict);
         }
 
-        protected virtual void ProcessElement(IDictionary<int, IList<TextElement>> dict, DiffState state)
+        protected virtual void ProcessElement(IDictionary<int, IList<XNode>> dict, DiffState state)
         {
-            XNode partNode;
-            if (state.Change != DiffChange.None)
-            {
-                var span = CreateHtmlChangeElement(state.Change);
-                span.Value = state.Diff.Text;
-                partNode = span;
-            }
-            else
-            {
-                partNode = new XText(state.Diff.Text);
-            }
             if (!dict.TryGetValue(state.ChangeIndex, out var nodes))
             {
-                nodes = new List<TextElement>();
+                nodes = new List<XNode>();
                 dict.Add(state.ChangeIndex, nodes);
             }
-            nodes.Add(new TextElement { Node = partNode, Offset = state.Offset });
+            var partNode = CreateHtmlChangeElement(state.Change, state.Diff.Text);
+            nodes.Add(partNode);
         }
 
-        protected virtual void ApplyChanges(IList<TextElement> toList, Dictionary<int, IList<TextElement>> dict)
+        protected virtual void ApplyChanges(IList<TextElement> toList, Dictionary<int, IList<XNode>> dict)
         {
             for (var idx = toList.Count - 1; idx >= 0; idx--)
             {
                 if (dict.TryGetValue(idx, out var changes))
                 {
-                    toList[idx].Node.ReplaceWith(changes.Select(x => x.Node));
+                    toList[idx].Node.ReplaceWith(changes);
                 }
             }
         }

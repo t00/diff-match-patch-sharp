@@ -8,7 +8,7 @@ namespace DiffMatchPatchSharp
 {
     public abstract class XmlDiffChanges: DiffChanges
     {
-        public IList<(TextElement change1, TextElement change2)> Elements { get; } = new List<(TextElement, TextElement)>();
+        public IList<(TextElement change1, TextElement change2)> TextElements { get; } = new List<(TextElement, TextElement)>();
 
         public virtual string GetElementText(XElement leftElement)
         {
@@ -113,6 +113,20 @@ namespace DiffMatchPatchSharp
         {
             var style = DiffHtmlExtensions.CreateStyle(GetColor(change));
             DiffHtmlExtensions.SetStyle(element, style);
+        }
+
+        protected XNode CreateHtmlChangeElement(DiffChange change, string text)
+        {
+            if (change != DiffChange.None)
+            {
+                var span = CreateHtmlChangeElement(change);
+                span.Value = text;
+                return span;
+            }
+            else
+            {
+                return new XText(text);
+            }
         }
 
         protected virtual XElement CreateHtmlChangeElement(DiffChange change)

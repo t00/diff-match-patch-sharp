@@ -41,6 +41,7 @@ namespace DiffMatchPatchSharp
                     {
                         state.Change = DiffChange.None;
                         action(state);
+                        state.Offset += state.Diff.Text.Length;
                     }
                     else if (diff[opIndex].Operation == Operation.Delete)
                     {
@@ -54,8 +55,8 @@ namespace DiffMatchPatchSharp
                             state.Change = DiffChange.Deleted;
                             action(state);
                         }
+                        state.Offset += state.Diff.Text.Length;
                     }
-                    state.Offset += state.Diff.Text.Length;
                 }
             }
         }
@@ -74,6 +75,7 @@ namespace DiffMatchPatchSharp
                     {
                         state.Change = DiffChange.None;
                         action(state);
+                        state.Offset += state.Diff.Text.Length;
                     }
                     else if (diff[opIndex].Operation == Operation.Insert)
                     {
@@ -87,8 +89,8 @@ namespace DiffMatchPatchSharp
                             state.Change = DiffChange.Added;
                             action(state);
                         }
+                        state.Offset += state.Diff.Text.Length;
                     }
-                    state.Offset += state.Diff.Text.Length;
                 }
             }
         }

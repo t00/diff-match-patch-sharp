@@ -19,7 +19,10 @@ namespace DiffMatchPatchSharp
             var texts = GetElementTexts(doc1, doc2);
             foreach (var text in texts)
             {
-                Elements.Add((new TextElement { Node = text.node1, Offset = sb1.Length }, new TextElement { Node = text.node2, Offset = sb2.Length }));
+                TextElements.Add((
+                    new TextElement { Node = text.node1, Offset = sb1.Length, Length = text.text1?.Length ?? 0 }, 
+                    new TextElement { Node = text.node2, Offset = sb2.Length, Length = text.text2?.Length ?? 0 }
+                ));
                 sb1.Append(text.text1);
                 sb2.Append(text.text2);
             }
