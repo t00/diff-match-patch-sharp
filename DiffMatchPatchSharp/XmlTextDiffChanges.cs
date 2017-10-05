@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -17,19 +18,11 @@ namespace DiffMatchPatchSharp
 
         public void AddChange(DiffMatchPatch dmp, XContainer doc1, XContainer doc2)
         {
-            var sb1 = new StringBuilder();
-            var sb2 = new StringBuilder();
-            var texts = GetElementTexts(doc1, doc2);
-            foreach (var text in texts)
-            {
-                TextElements.Add((
-                    new TextElement { Node = text.node1, Offset = sb1.Length, Length = text.text1?.Length ?? 0 }, 
-                    new TextElement { Node = text.node2, Offset = sb2.Length, Length = text.text2?.Length ?? 0 }
-                ));
-                sb1.Append(text.text1);
-                sb2.Append(text.text2);
-            }
-            base.AddChange(dmp, sb1.ToString(), sb2.ToString());
+            var texts1 = GetElementTexts(doc1);
+            var texts2 = GetElementTexts(doc2);
+            var text1 = AddTextElements(TextElements1, texts1);
+            var text2 = AddTextElements(TextElements2, texts2);
+            base.AddChange(dmp, text1, text2);
         }
 
         public virtual string GetElementText(XElement leftElement)
@@ -45,17 +38,15 @@ namespace DiffMatchPatchSharp
             return builder.ToString();
         }
 
-        protected IEnumerable<(XNode node1, string text1, XNode node2, string text2)> GetElementTexts(XContainer doc1, XContainer doc2)
+        protected IEnumerable<(XNode node1, string text1)> GetElementTexts(XContainer doc)
         {
-            var pairs = GetNodes(doc1.DescendantNodes(), doc2.DescendantNodes());
-            foreach (var e in pairs)
+            foreach (var e in doc.DescendantNodes())
             {
-                var text1 = e.Item1 == null ? null : GetElementText(e.Item1);
-                var text2 = e.Item2 == null ? null : GetElementText(e.Item2);
+                var text = e == null ? null : GetElementText(e);
 
-                if (text1 != null || text2 != null)
+                if (text != null)
                 {
-                    yield return (e.Item1, text1, e.Item2, text2);
+                    yield return (e, text);
                 }
             }
         }
@@ -74,14 +65,9 @@ namespace DiffMatchPatchSharp
             return null;
         }
 
-        protected override XNode CreateChangeNode(DiffChange change, string text)
+        protected override void ReplaceNode(TextElement textElement, IList<TextPart> parts)
         {
-            return new XText(text);
-        }
-
-        protected override void ReplaceNode(TextElement textElement, IList<XNode> nodes)
-        {
-            textElement.Node.ReplaceWith(nodes);
+            textElement.Node.ReplaceWith(parts.Select(n => new XText(n.Text)));
         }
     }
 }

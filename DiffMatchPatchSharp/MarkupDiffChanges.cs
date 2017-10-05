@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace DiffMatchPatchSharp
 {
@@ -8,49 +9,35 @@ namespace DiffMatchPatchSharp
         public void ProcessChanges()
         {
             var parts1 = new List<TextPart>();
-            var elements1 = TextElements.Select(e => e.change1).ToList();
             var parts2 = new List<TextPart>();
-            var elements2 = TextElements.Select(e => e.change2).ToList();
-            Process1(state => { ProcessElement(elements1, parts1, state); });
-            Process2(state => { ProcessElement(elements2, parts2, state); });
-            ApplyChanges(elements1, parts1);
-            ApplyChanges(elements2, parts2);
+            Process1(state => { ProcessElement(TextElements1, parts1, state); });
+            Process2(state => { ProcessElement(TextElements2, parts2, state); });
+            ApplyChanges(TextElements1, parts1);
+            ApplyChanges(TextElements2, parts2);
         }
 
-        protected IList<(TextElement change1, TextElement change2)> TextElements { get; } = new List<(TextElement, TextElement)>();
-
-        protected static IEnumerable<(TItem, TItem)> GetNodes<TItem>(IEnumerable<TItem> items1, IEnumerable<TItem> items2)
+        protected string AddTextElements(IList<TextElement> textElements, IEnumerable<(TNode, string)> texts)
         {
-            using (var e1 = items1.GetEnumerator())
+            var sb = new StringBuilder();
+            foreach (var text in texts)
             {
-                using (var e2 = items2.GetEnumerator())
+                textElements.Add(new TextElement
                 {
-                    while (e1.MoveNext())
-                    {
-                        if (e2.MoveNext())
-                        {
-                            yield return (e1.Current, e2.Current);
-                        }
-                        else
-                        {
-                            do
-                            {
-                                yield return (e1.Current, default(TItem));
-                            }
-                            while (e1.MoveNext());
-                            yield break;
-                        }
-                    }
-                    if (e2.MoveNext())
-                    {
-                        do
-                        {
-                            yield return (default(TItem), e2.Current);
-                        } while (e2.MoveNext());
-                    }
+                    Node = text.Item1,
+                    Offset = sb.Length,
+                    Length = text.Item2?.Length ?? 0
+                });
+                if (text.Item2 != null)
+                {
+                    sb.Append(text.Item2);
                 }
             }
+            return sb.ToString();
         }
+
+        protected IList<TextElement> TextElements1 { get; } = new List<TextElement>();
+
+        protected IList<TextElement> TextElements2 { get; } = new List<TextElement>();
 
         protected virtual void ProcessElement(IList<TextElement> textElements, IList<TextPart> parts, DiffState state)
         {
@@ -59,7 +46,7 @@ namespace DiffMatchPatchSharp
 
         protected virtual void ApplyChanges(IList<TextElement> textElements, IList<TextPart> parts)
         {
-            var newNodes = textElements.Where(x => x.Node != null).Select(x => new { Element = x, Nodes = new List<TNode>() }).ToList();
+            var newNodes = textElements.Where(x => x.Node != null).Select(x => new { Element = x, Nodes = new List<TextPart>() }).ToList();
             var partIndex = 0;
             var partOffset = 0;
             var elementIndex = 0;
@@ -76,12 +63,12 @@ namespace DiffMatchPatchSharp
                     {
                         var partLength = partText.Length - (partEnd - elementEnd);
                         partText = partText.Substring(0, partLength);
-                        newNodes[elementIndex++].Nodes.Add(CreateChangeNode(parts[partIndex].Change, partText));
+                        newNodes[elementIndex++].Nodes.Add(CreateChangePart(parts[partIndex].Change, partText, partOffset));
                         partOffset += partLength;
                     }
                     else
                     {
-                        newNodes[elementIndex].Nodes.Add(CreateChangeNode(parts[partIndex].Change, partText));
+                        newNodes[elementIndex].Nodes.Add(CreateChangePart(parts[partIndex].Change, partText, partOffset));
                         partIndex++;
                         partOffset = 0;
                     }
@@ -96,13 +83,21 @@ namespace DiffMatchPatchSharp
             }
         }
 
-        protected abstract TNode CreateChangeNode(DiffChange change, string partText);
+        protected virtual TextPart CreateChangePart(DiffChange change, string partText, int offset)
+        {
+            return new TextPart
+            {
+                Change = change,
+                Text = partText,
+                Offset = offset
+            };
+        }
 
-        protected abstract void ReplaceNode(TextElement textElement, IList<TNode> nodes);
+        protected abstract void ReplaceNode(TextElement textElement, IList<TextPart> parts);
 
         protected class TextElement
         {
-            public TNode Node { get; internal set; }
+            public TNode Node { get; set; }
 
             public int Offset { get; set; }
 
