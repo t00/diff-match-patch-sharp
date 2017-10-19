@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace DiffMatchPatchSharp
 {
     public class HtmlTextDiffChanges: XmlTextDiffChanges
     {
+        public bool PreserveNewlines { get; set; } = true;
+
         public bool CompareHtmlStyleEqual(XElement leftElement, XElement rightElement)
         {
             if (leftElement == null || rightElement == null)
@@ -36,18 +40,41 @@ namespace DiffMatchPatchSharp
             DiffHtmlExtensions.SetStyle(element, style);
         }
 
+        protected override string GetElementText(XNode node)
+        {
+            var text = base.GetElementText(node);
+            if (text == null && IsNewlineParagraph(node, out var _))
+            {
+                return Environment.NewLine;
+            }
+            return text;
+        }
+
         protected override void ReplaceNode(TextElement textElement, IList<TextPart> parts)
         {
-            textElement.Node.ReplaceWith(parts.Select(n =>
+            textElement.Node.ReplaceWith(parts.Select(part => GetChangeNodes(part, textElement.Node)));
+        }
+
+        private object GetChangeNodes(TextPart n, XNode originalNode)
+        {
+            if (IsNewlineParagraph(originalNode, out var element) && n.Text == Environment.NewLine)
             {
-                if (n.Change != DiffChange.None)
-                {
-                    var span = CreateHtmlChangeElement(n.Change);
-                    span.Value = n.Text;
-                    return (object)span;
-                }
-                return new XText(n.Text);
-            }));
+                element.Add(GetChangeNode(n.Change, new XElement(XName.Get("br"))));
+                return element;
+            }
+
+            return GetChangeNode(n.Change, new XText(n.Text));
+        }
+
+        private object GetChangeNode(DiffChange change, object text)
+        {
+            if (change != DiffChange.None)
+            {
+                var span = CreateHtmlChangeElement(change);
+                span.Add(text);
+                return span;
+            }
+            return text;
         }
 
         protected virtual XElement CreateHtmlChangeElement(DiffChange change)
@@ -90,6 +117,24 @@ namespace DiffMatchPatchSharp
                     }
                 }
             }
+        }
+
+        private bool IsNewlineParagraph(XNode node, out XElement element)
+        {
+            if (PreserveNewlines && node.NodeType == XmlNodeType.Element)
+            {
+                element = (XElement) node;
+                // treat empty paragraph as a newline
+                if ("p".Equals(element.Name.LocalName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (element.IsEmpty)
+                    {
+                        return true;
+                    }
+                }
+            }
+            element = null;
+            return false;
         }
     }
 }
