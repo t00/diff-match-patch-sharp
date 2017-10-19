@@ -9,6 +9,8 @@ namespace DiffMatchPatchSharp
 {
     public class XmlTextDiffChanges: MarkupDiffChanges<XNode>
     {
+        public bool TrimInterElementWhitespaces { get; set; } = true;
+
         public new void AddChange(DiffMatchPatch dmp, string xml1, string xml2)
         {
             var doc1 = XDocument.Parse(xml1);
@@ -44,6 +46,10 @@ namespace DiffMatchPatchSharp
             {
                 var text = e == null ? null : GetElementText(e);
 
+                if(TrimInterElementWhitespaces && e?.NodeType == XmlNodeType.Text && e.PreviousNode?.NodeType == XmlNodeType.Element && string.IsNullOrEmpty(text?.Trim()))
+                {
+                    continue;
+                }
                 if (text != null)
                 {
                     yield return (e, text);
