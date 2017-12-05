@@ -224,7 +224,9 @@ namespace DiffMatchPatchSharp
             System.Windows.Documents.TextElement.FontWeightProperty,
             System.Windows.Documents.TextElement.BackgroundProperty,
             System.Windows.Documents.TextElement.TextEffectsProperty,
-            System.Windows.Documents.TextElement.ForegroundProperty
+            System.Windows.Documents.TextElement.ForegroundProperty,
+            Inline.BaselineAlignmentProperty,
+            Inline.TextDecorationsProperty
         };
     }
 }
