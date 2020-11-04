@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>DiffMatchPatch by Goole with XML, HTML and plain text diff support</Title>
+    <Title>DiffMatchPatchSharp</Title>
     <Authors>Michal Turecki</Authors>
-    <Description>Supports HTML comparison with marking of changed text using inline span</Description>
+    <Description>DiffMatchPatch by Google with XML, HTML and plain text diff support (netstandard2.0)</Description>
     <PackageProjectUrl>https://github.com/t00/diff-match-patch-sharp</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/t00/diff-match-patch-sharp</RepositoryUrl>
-    <PackageVersion>1.0.2</PackageVersion>
+    <PackageVersion>1.0.3</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

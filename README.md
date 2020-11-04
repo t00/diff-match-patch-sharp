@@ -1,5 +1,5 @@
 # DiffMatchPatchSharp
-DiffMatchPatch by Google netstandard2.0 build with XML, HTML and plain text diff support
+DiffMatchPatch by Google with XML, HTML and plain text diff support (netstandard2.0)
 
 HTML diff example:
 
