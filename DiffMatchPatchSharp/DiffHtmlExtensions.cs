@@ -35,7 +35,7 @@ namespace DiffMatchPatchSharp
 
         public static void SetClass(XElement element, string className, bool add = true)
         {
-            var classes = element.Attribute(XName.Get("class"))?.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>();
+            var classes = element.Attribute(XName.Get("class"))?.Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>();
             if (classes.Contains(className, StringComparer.InvariantCultureIgnoreCase) != add)
             {
                 if (add)
@@ -47,7 +47,7 @@ namespace DiffMatchPatchSharp
                     classes.Remove(className);
                 }
             }
-            element.SetAttributeValue(XName.Get("class"), string.Join(' ', classes));
+            element.SetAttributeValue(XName.Get("class"), string.Join(" ", classes));
         }
 
         public static string SetStyle(string css, IDictionary<string, string> newValues)

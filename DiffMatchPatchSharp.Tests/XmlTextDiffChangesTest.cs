@@ -24,7 +24,6 @@ namespace DiffMatchPatchSharp.Tests
             var sb2 = new StringBuilder();
             xc.Process2(state => { TextDiffChangeTest.ProcesTest(sb2, state); });
             Assert.AreEqual("First text in the *html page*0.More text *coming*0 later+.+0Hell", sb2.ToString());
-
         }
     }
 }

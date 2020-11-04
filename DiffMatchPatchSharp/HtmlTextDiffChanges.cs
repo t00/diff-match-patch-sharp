@@ -10,6 +10,16 @@ namespace DiffMatchPatchSharp
     {
         public bool PreserveNewlines { get; set; } = true;
 
+        public string CompareHtml(string html1, string html2)
+        {
+            var dmp = new DiffMatchPatch();
+            var doc1 = XDocument.Parse(html1);
+            var doc2 = XDocument.Parse(html2);
+            AddChange(dmp, doc1, doc2);
+            ProcessChanges();
+            return GetElementText((XElement)doc2.FirstNode);
+        }
+
         public bool CompareHtmlStyleEqual(XElement leftElement, XElement rightElement)
         {
             if (leftElement == null || rightElement == null)

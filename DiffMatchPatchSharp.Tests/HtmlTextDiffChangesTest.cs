@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.Drawing;
+using System.Xml.Linq;
 using NUnit.Framework;
 
 namespace DiffMatchPatchSharp.Tests
@@ -42,6 +43,16 @@ namespace DiffMatchPatchSharp.Tests
             Assert.AreEqual(html1, e1);
             var e2 = xc.GetElementText((XElement)doc2.FirstNode);
             Assert.AreEqual("<p><span>First text</span><span>, second Text</span>,third text<span style=\"background-color: #9ACD32\">, last text</span></p>", e2);
+        }
+
+        [Test]
+        public void TestCompareHtml()
+        {
+            var html1 = "<p><span>First text in the paragraph.</span><span>More text added later</span>Hello</p>";
+            var html2 = "<p><span>First text </span><span>in the paragraph. A new text inserted.</span><span>More text coming later.</span>Hell</p>";
+            var dc = new HtmlTextDiffChanges { AddedColor = Color.Aqua };
+            var diff = dc.CompareHtml(html1, html2);
+            Assert.AreEqual("<p><span>First text </span><span>in the paragraph.<span style=\"background-color: #00FFFF\"> A new text inserted.</span></span><span>More text <span style=\"background-color: #FFFF00\">coming</span> later<span style=\"background-color: #00FFFF\">.</span></span>Hell</p>", diff);
         }
     }
 }
