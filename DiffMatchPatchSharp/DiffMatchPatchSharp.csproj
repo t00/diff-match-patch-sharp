@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Title>DiffMatchPatchSharp</Title>
     <Authors>Michal Turecki</Authors>
-    <Description>DiffMatchPatch by Google with XML, HTML and plain text diff support (netstandard2.0)</Description>
+    <Description>Side by side (before and after) HTML diff library using Google DiffMatchPatch C# port with XML and plain text support</Description>
     <PackageProjectUrl>https://github.com/t00/diff-match-patch-sharp</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/t00/diff-match-patch-sharp</RepositoryUrl>

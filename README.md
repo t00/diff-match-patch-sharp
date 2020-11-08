@@ -1,5 +1,5 @@
 # DiffMatchPatchSharp
-DiffMatchPatch by Google with XML, HTML and plain text diff support, side by side (netstandard2.0)
+Side by side (before and after) HTML diff library using Google DiffMatchPatch C# port with XML and plain text support
 
 Package contains plain DiffMatchPatch library with C# naming style and also several extensions allowing parsing of structured formats.
 Custom formatters can be added into pipeline to present the changes in a customized way.
