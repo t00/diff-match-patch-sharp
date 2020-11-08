@@ -9,15 +9,19 @@ namespace DiffMatchPatchSharp
     public class HtmlTextDiffChanges: XmlTextDiffChanges
     {
         public bool PreserveNewlines { get; set; } = true;
+        
+        public bool DefineHtmlEntities { get; set; }
 
-        public string CompareHtml(string html1, string html2)
+        public (string, string) CompareHtml(string html1, string html2)
         {
             var dmp = new DiffMatchPatch();
-            var doc1 = XDocument.Parse(html1);
-            var doc2 = XDocument.Parse(html2);
+            var doc1 = XDocument.Parse(ParseHtml(html1, true));
+            var doc2 = XDocument.Parse(ParseHtml(html2, true));
             AddChange(dmp, doc1, doc2);
             ProcessChanges();
-            return GetElementText((XElement)doc2.FirstNode);
+            var removed = ParseHtml(GetElementText((XElement)doc1.FirstNode), false);
+            var added = ParseHtml(GetElementText((XElement)doc2.FirstNode), false);
+            return (removed, added);
         }
 
         public bool CompareHtmlStyleEqual(XElement leftElement, XElement rightElement)
@@ -44,6 +48,16 @@ namespace DiffMatchPatchSharp
             return true;
         }
 
+        protected virtual string ParseHtml(string html, bool input)
+        {
+            if (!DefineHtmlEntities || html == null)
+            {
+                return html;
+            }
+
+            return input ? html.Replace("&", "&amp;") : html.Replace("&amp;", "&").Replace("&amp;", "&");
+        }
+        
         protected virtual void MarkHtmlChange(XElement element, DiffChange change)
         {
             var style = DiffHtmlExtensions.CreateStyle(GetColor(change));

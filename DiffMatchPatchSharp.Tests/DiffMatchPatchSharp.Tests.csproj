@@ -14,4 +14,21 @@
     <ProjectReference Include="..\DiffMatchPatchSharp\DiffMatchPatchSharp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="TestData\TableAfter.html" />
+    <EmbeddedResource Include="TestData\TableAfter.html" />
+    <None Remove="TestData\TableBefore.html" />
+    <EmbeddedResource Include="TestData\TableBefore.html" />
+    <None Remove="TestData\TableRemoved.html" />
+    <EmbeddedResource Include="TestData\TableRemoved.html" />
+    <None Remove="TestData\TableAdded.html" />
+    <EmbeddedResource Include="TestData\TableAdded.html" />
+    <EmbeddedResource Remove="Preview\**" />
+    <None Remove="Preview\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Preview\**" />
+  </ItemGroup>
+
 </Project>

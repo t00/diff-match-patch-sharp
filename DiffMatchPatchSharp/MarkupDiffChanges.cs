@@ -65,6 +65,10 @@ namespace DiffMatchPatchSharp
                         partText = partText.Substring(0, partLength);
                         newNodes[elementIndex++].Nodes.Add(CreateChangePart(parts[partIndex].Change, partText, partOffset));
                         partOffset += partLength;
+                        if (elementIndex >= newNodes.Count)
+                        {
+                            break;
+                        }
                     }
                     else
                     {

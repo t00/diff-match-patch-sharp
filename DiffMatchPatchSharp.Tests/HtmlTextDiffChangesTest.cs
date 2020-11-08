@@ -1,4 +1,8 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 using NUnit.Framework;
 
@@ -51,8 +55,31 @@ namespace DiffMatchPatchSharp.Tests
             var html1 = "<p><span>First text in the paragraph.</span><span>More text added later</span>Hello</p>";
             var html2 = "<p><span>First text </span><span>in the paragraph. A new text inserted.</span><span>More text coming later.</span>Hell</p>";
             var dc = new HtmlTextDiffChanges { AddedColor = Color.Aqua };
-            var diff = dc.CompareHtml(html1, html2);
-            Assert.AreEqual("<p><span>First text </span><span>in the paragraph.<span style=\"background-color: #00FFFF\"> A new text inserted.</span></span><span>More text <span style=\"background-color: #FFFF00\">coming</span> later<span style=\"background-color: #00FFFF\">.</span></span>Hell</p>", diff);
+            var (removed, added) = dc.CompareHtml(html1, html2);
+            Assert.AreEqual("<p><span>First text in the paragraph.</span><span>More text <span style=\"background-color: #FFFF00\">added</span> later</span>Hell<span style=\"background-color: #FF6347\">o</span></p>", removed);
+            Assert.AreEqual("<p><span>First text </span><span>in the paragraph.<span style=\"background-color: #00FFFF\"> A new text inserted.</span></span><span>More text <span style=\"background-color: #FFFF00\">coming</span> later<span style=\"background-color: #00FFFF\">.</span></span>Hell</p>", added);
+        }
+
+        [Test]
+        public void TestCompareTables()
+        {
+            var html1 = GetResource("TableBefore.html");
+            var html2 = GetResource("TableAfter.html");
+            var dc = new HtmlTextDiffChanges { DefineHtmlEntities = true };
+            var (removed, added) = dc.CompareHtml(html1, html2);
+            var expectedRemoved = GetResource("TableRemoved.html");
+            var expectedAdded = GetResource("TableAdded.html");
+            Assert.AreEqual(expectedRemoved, removed);
+            Assert.AreEqual(expectedAdded, added);
+        }
+
+        private static string GetResource(string suffix)
+        {
+            var fullName = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(x => x.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullName);
+            using var reader = new StreamReader(stream ?? throw new InvalidDataException(nameof(stream)));
+            return reader.ReadToEnd();
+
         }
     }
 }
