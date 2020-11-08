@@ -12,7 +12,7 @@ Custom formatters can be added into pipeline to present the changes in a customi
 Main purpose of the library is HTML comparison.
 Usually diff shows results in a single document which includes all changes: deleted, modified, added.
 This library produces side by side HTML diff results in 3 colors - red (deleted), yellow (changed) and green (added) - all configurable.
-Document before changes is coloured with deleted and changed markings while document after changes is coloured with changed and added markings.
+"Before" document changes are coloured with deleted and changed markings while "After" document changes are coloured with changed and added markings.
 
 HTML diff example:
 
