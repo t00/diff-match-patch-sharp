@@ -1,10 +1,9 @@
-﻿namespace DiffMatchPatchSharp
+﻿namespace DiffMatchPatchSharp;
+
+public enum DiffChange
 {
-    public enum DiffChange
-    {
-        None,
-        Added,
-        Changed,
-        Deleted
-    }
+    None,
+    Added,
+    Changed,
+    Deleted
 }

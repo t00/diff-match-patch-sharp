@@ -5,184 +5,183 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace DiffMatchPatchSharp
+namespace DiffMatchPatchSharp;
+
+public static class DiffHtmlExtensions
 {
-    public static class DiffHtmlExtensions
+    public static string GetHtmlColor(Color color)
     {
-        public static string GetHtmlColor(Color color)
-        {
-            return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
-        }
+        return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
+    }
 
-        public static IDictionary<string, string> CreateStyle(Color color)
+    public static IDictionary<string, string> CreateStyle(Color color)
+    {
+        var bgColor = GetHtmlColor(color);
+        var style = new Dictionary<string, string> { { "background-color", bgColor } };
+        return style;
+    }
+
+    public static string GetStyle(XElement element)
+    {
+        return element.Attribute(XName.Get("style"))?.Value;
+    }
+
+    public static void SetStyle(XElement element, IDictionary<string, string> newValues)
+    {
+        var existingStyle = GetStyle(element);
+        var style = SetStyle(existingStyle, newValues);
+        element.SetAttributeValue(XName.Get("style"), style);
+    }
+
+    public static void SetClass(XElement element, string className, bool add = true)
+    {
+        var classes = element.Attribute(XName.Get("class"))?.Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>();
+        if (classes.Contains(className, StringComparer.InvariantCultureIgnoreCase) != add)
         {
-            var bgColor = GetHtmlColor(color);
-            var style = new Dictionary<string, string> { { "background-color", bgColor } };
+            if (add)
+            {
+                classes.Add(className);
+            }
+            else
+            {
+                classes.Remove(className);
+            }
+        }
+        element.SetAttributeValue(XName.Get("class"), string.Join(" ", classes));
+    }
+
+    public static string SetStyle(string css, IDictionary<string, string> newValues)
+    {
+        var style = ReadInlineStyle(css);
+        foreach (var value in newValues)
+        {
+            style[value.Key] = value.Value;
+        }
+        return WriteInlineStyle(style);
+    }
+
+    public static IDictionary<string, string> ReadInlineStyle(XElement element)
+    {
+        return ReadInlineStyle(GetStyle(element));
+    }
+
+    public static IDictionary<string, string> ReadInlineStyle(string css)
+    {
+        var style = new Dictionary<string, string>();
+        if (string.IsNullOrEmpty(css))
+        {
             return style;
         }
-
-        public static string GetStyle(XElement element)
+        var label = new StringBuilder();
+        var value = new StringBuilder();
+        var isLabel = true;
+        var isQuote = false;
+        var isStarted = false;
+        var wasQuoted = false;
+        foreach (var c in css)
         {
-            return element.Attribute(XName.Get("style"))?.Value;
-        }
-
-        public static void SetStyle(XElement element, IDictionary<string, string> newValues)
-        {
-            var existingStyle = GetStyle(element);
-            var style = SetStyle(existingStyle, newValues);
-            element.SetAttributeValue(XName.Get("style"), style);
-        }
-
-        public static void SetClass(XElement element, string className, bool add = true)
-        {
-            var classes = element.Attribute(XName.Get("class"))?.Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>();
-            if (classes.Contains(className, StringComparer.InvariantCultureIgnoreCase) != add)
+            if (isLabel)
             {
-                if (add)
+                if (c == ':')
                 {
-                    classes.Add(className);
+                    isStarted = false;
+                    isLabel = false;
                 }
-                else
+                else if (c != ';' && (isStarted || !char.IsWhiteSpace(c)))
                 {
-                    classes.Remove(className);
+                    isStarted = true;
+                    label.Append(c);
                 }
             }
-            element.SetAttributeValue(XName.Get("class"), string.Join(" ", classes));
-        }
-
-        public static string SetStyle(string css, IDictionary<string, string> newValues)
-        {
-            var style = ReadInlineStyle(css);
-            foreach (var value in newValues)
+            else
             {
-                style[value.Key] = value.Value;
-            }
-            return WriteInlineStyle(style);
-        }
-
-        public static IDictionary<string, string> ReadInlineStyle(XElement element)
-        {
-            return ReadInlineStyle(GetStyle(element));
-        }
-
-        public static IDictionary<string, string> ReadInlineStyle(string css)
-        {
-            var style = new Dictionary<string, string>();
-            if (string.IsNullOrEmpty(css))
-            {
-                return style;
-            }
-            var label = new StringBuilder();
-            var value = new StringBuilder();
-            var isLabel = true;
-            var isQuote = false;
-            var isStarted = false;
-            var wasQuoted = false;
-            foreach (var c in css)
-            {
-                if (isLabel)
+                if (c == '\'' && (!isStarted || isQuote))
                 {
-                    if (c == ':')
-                    {
-                        isStarted = false;
-                        isLabel = false;
-                    }
-                    else if (c != ';' && (isStarted || !char.IsWhiteSpace(c)))
-                    {
-                        isStarted = true;
-                        label.Append(c);
-                    }
+                    isQuote = !isQuote;
+                    isStarted = isQuote;
+                    wasQuoted = true;
                 }
-                else
+                else if (c == ';' && !isQuote)
                 {
-                    if (c == '\'' && (!isStarted || isQuote))
+                    if (label.Length > 0 && value.Length > 0)
                     {
-                        isQuote = !isQuote;
-                        isStarted = isQuote;
-                        wasQuoted = true;
-                    }
-                    else if (c == ';' && !isQuote)
-                    {
-                        if (label.Length > 0 && value.Length > 0)
+                        var v = value.ToString();
+                        if (!wasQuoted)
                         {
-                            var v = value.ToString();
-                            if (!wasQuoted)
-                            {
-                                v = v.TrimEnd();
-                            }
-                            style[label.ToString().TrimEnd()] = v;
-                            label.Clear();
-                            value.Clear();
+                            v = v.TrimEnd();
                         }
-                        isLabel = true;
-                        isStarted = false;
-                        wasQuoted = false;
+                        style[label.ToString().TrimEnd()] = v;
+                        label.Clear();
+                        value.Clear();
                     }
-                    else if(isStarted || !char.IsWhiteSpace(c))
-                    {
-                        isStarted = true;
-                        value.Append(c);
-                    }
+                    isLabel = true;
+                    isStarted = false;
+                    wasQuoted = false;
                 }
-            }
-            if (label.Length > 0 && value.Length > 0)
-            {
-                var v = value.ToString();
-                if (!wasQuoted)
+                else if(isStarted || !char.IsWhiteSpace(c))
                 {
-                    v = v.TrimEnd();
+                    isStarted = true;
+                    value.Append(c);
                 }
-                style[label.ToString()] = v;
             }
-            return style;
+        }
+        if (label.Length > 0 && value.Length > 0)
+        {
+            var v = value.ToString();
+            if (!wasQuoted)
+            {
+                v = v.TrimEnd();
+            }
+            style[label.ToString()] = v;
+        }
+        return style;
+    }
+
+    public static string WriteInlineStyle(IDictionary<string, string> style)
+    {
+        var sb = new StringBuilder();
+        foreach (var kvp in style.Where(x => x.Value != null))
+        {
+            sb.Append(kvp.Key);
+            sb.Append(':');
+            var hasSpaces = kvp.Value.Any(char.IsWhiteSpace);
+            if (hasSpaces)
+            {
+                sb.Append("'");
+            }
+            sb.Append(kvp.Value.Replace("'", "\'"));
+            if (hasSpaces)
+            {
+                sb.Append("'");
+            }
+            sb.Append(';');
+        }
+        return sb.ToString();
+    }
+
+    public static bool AreStylesEqual(IDictionary<string, string> style1, IDictionary<string, string> style2, ICollection<string> compareOnly = null, StringComparison valueComparison = StringComparison.InvariantCultureIgnoreCase)
+    {
+        if (style1 == null || style2 == null)
+        {
+            return false;
+        }
+        if (style1 == style2)
+        {
+            return true;
         }
 
-        public static string WriteInlineStyle(IDictionary<string, string> style)
+        var keysTotTest = style1.Keys.Union(style2.Keys).Where(x => compareOnly == null || compareOnly.Contains(x));
+        foreach (var key in keysTotTest)
         {
-            var sb = new StringBuilder();
-            foreach (var kvp in style.Where(x => x.Value != null))
-            {
-                sb.Append(kvp.Key);
-                sb.Append(':');
-                var hasSpaces = kvp.Value.Any(char.IsWhiteSpace);
-                if (hasSpaces)
-                {
-                    sb.Append("'");
-                }
-                sb.Append(kvp.Value.Replace("'", "\'"));
-                if (hasSpaces)
-                {
-                    sb.Append("'");
-                }
-                sb.Append(';');
-            }
-            return sb.ToString();
-        }
-
-        public static bool AreStylesEqual(IDictionary<string, string> style1, IDictionary<string, string> style2, ICollection<string> compareOnly = null, StringComparison valueComparison = StringComparison.InvariantCultureIgnoreCase)
-        {
-            if (style1 == null || style2 == null)
+            if(style1.TryGetValue(key, out string value1) != style2.TryGetValue(key, out string value2))
             {
                 return false;
             }
-            if (style1 == style2)
+            if (!string.Equals(value1, value2, valueComparison))
             {
-                return true;
+                return false;
             }
-
-            var keysTotTest = style1.Keys.Union(style2.Keys).Where(x => compareOnly == null || compareOnly.Contains(x));
-            foreach (var key in keysTotTest)
-            {
-                if(style1.TryGetValue(key, out string value1) != style2.TryGetValue(key, out string value2))
-                {
-                    return false;
-                }
-                if (!string.Equals(value1, value2, valueComparison))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
+        return true;
     }
 }
